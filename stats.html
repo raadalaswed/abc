@@ -15,6 +15,7 @@ main{padding:15px}
 .card{background:#1f2933;padding:15px;border-radius:14px;margin-bottom:15px}
 .section{margin-top:20px}
 h2{margin-bottom:10px;font-size:16px}
+canvas{background:#1f2933;border-radius:14px;margin-top:15px}
 </style>
 </head>
 
@@ -31,10 +32,14 @@ h2{margin-bottom:10px;font-size:16px}
 
 <main>
   <div class="section card" id="analysis">جارٍ التحليل...</div>
+  <div class="card">
+    <canvas id="expenseChart" width="400" height="400"></canvas>
+  </div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 // ===== Firebase Config =====
@@ -46,17 +51,21 @@ const db = firebase.database();
 
 // ===== Helper Functions =====
 function formatCurrency(amount){ return amount.toLocaleString(); }
-function getWeekStart(d){
-  let date = new Date(d); date.setHours(0,0,0,0);
-  date.setDate(date.getDate() - date.getDay());
-  return date.getTime();
-}
+function getWeekStart(d){ let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() - date.getDay()); return date.getTime(); }
+
+// ===== Chart Setup =====
+const ctx = document.getElementById('expenseChart').getContext('2d');
+let chart = new Chart(ctx, {
+    type: 'pie',
+    data: { labels: [], datasets:[{data:[], backgroundColor:['#38bdf8','#facc15','#ef4444','#22c55e','#a78bfa']}] },
+    options:{responsive:true, plugins:{legend:{position:'bottom'}}}
+});
 
 // ===== Main Analysis =====
-db.ref("finance/transactions").on("value", snap=>{
-  const data = snap.val();
+function analyzeTransactions(data){
   if(!data){
     document.getElementById("analysis").innerText="لا توجد بيانات بعد";
+    chart.data.labels=[]; chart.data.datasets[0].data=[]; chart.update();
     return;
   }
 
@@ -71,7 +80,6 @@ db.ref("finance/transactions").on("value", snap=>{
     else{
       expenseTotal += t.amount;
       categories[t.category] = (categories[t.category]||0)+t.amount;
-
       if(now - t.date <= oneWeek) weekExpense += t.amount;
       if(now - t.date <= oneMonth) monthExpense += t.amount;
     }
@@ -79,31 +87,26 @@ db.ref("finance/transactions").on("value", snap=>{
 
   // ===== Top category =====
   let topCat="", topVal=0;
-  for(let cat in categories){
-    if(categories[cat]>topVal){
-      topVal = categories[cat];
-      topCat = cat;
-    }
-  }
+  for(let cat in categories){ if(categories[cat]>topVal){ topVal=categories[cat]; topCat=cat; } }
 
   // ===== Recommendations =====
   let advice = [];
-  // 1. مصاريف أعلى من الدخل
-  if(expenseTotal > incomeTotal)
-    advice.push("⚠️ مصاريفك أعلى من دخلك");
-
-  // 2. أعلى فئة صرف
+  if(expenseTotal > incomeTotal) advice.push("⚠️ مصاريفك أعلى من دخلك");
   if(topCat) advice.push(`💡 أكثر فئة صرف: ${topCat} (${((topVal/expenseTotal)*100).toFixed(0)}%)`);
-
-  // 3. نصائح حسب فئات
-  if(categories["أكل"] && categories["أكل"]>expenseTotal*0.35)
-    advice.push("🍔 صرفك على الأكل مرتفع، حاول التقليل");
-
-  // 4. مقارنة الأسبوع والشهر
+  if(categories["أكل"] && categories["أكل"]>expenseTotal*0.35) advice.push("🍔 صرفك على الأكل مرتفع، حاول التقليل");
   const avgWeek = expenseTotal/Math.max(1,Object.keys(data).length/4);
   advice.push(`📅 المصاريف هذا الأسبوع: ${formatCurrency(weekExpense)} | هذا الشهر: ${formatCurrency(monthExpense)}`);
-
   document.getElementById("analysis").innerHTML = advice.join("<br>");
+
+  // ===== Update Pie Chart =====
+  chart.data.labels = Object.keys(categories);
+  chart.data.datasets[0].data = Object.values(categories);
+  chart.update();
+}
+
+// ===== Real-time Listener =====
+db.ref("finance/transactions").on("value", snap=>{
+  analyzeTransactions(snap.val());
 });
 </script>
 
