@@ -4,35 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>إضافة عملية | مصاريفي</title>
-
 <style>
-body{
-  margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;
-  font-family:Tahoma,Arial;
-}
+body{margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;font-family:Tahoma}
 header{padding:15px;text-align:center;background:#020617;font-size:20px}
 nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
 nav a{color:#9ca3af;text-decoration:none}
 nav a.active{color:#38bdf8;font-weight:bold}
 main{padding:15px}
-.card{
-  background:#1f2933;padding:15px;border-radius:14px
-}
-input,select,button{
-  width:100%;padding:10px;margin-top:10px;
-  border:none;border-radius:8px;
-}
+.card{background:#1f2933;padding:15px;border-radius:14px}
+input,select,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px}
 input,select{background:#020617;color:#e5e7eb}
-button{
-  background:#38bdf8;color:#020617;font-weight:bold
-}
+button{background:#38bdf8;color:#020617;font-weight:bold}
 </style>
 </head>
-
 <body>
 
 <header>➕ إضافة عملية</header>
-
 <nav>
   <a href="index.html">الرئيسية</a>
   <a href="add.html" class="active">إضافة</a>
@@ -46,9 +33,7 @@ button{
       <option value="income">دخل</option>
       <option value="expense">مصروف</option>
     </select>
-
     <input type="number" id="amount" placeholder="المبلغ">
-
     <select id="category">
       <option>أكل</option>
       <option>مواصلات</option>
@@ -56,7 +41,6 @@ button{
       <option>فواتير</option>
       <option>أخرى</option>
     </select>
-
     <button onclick="save()">حفظ</button>
   </div>
 </main>
@@ -76,21 +60,26 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const transactionsRef = db.ref("finance/transactions");
 
 function save(){
-  const type = document.getElementById("type").value;
-  const amount = Number(document.getElementById("amount").value);
-  const category = document.getElementById("category").value;
-
+  const type=document.getElementById("type").value;
+  const amount=Number(document.getElementById("amount").value);
+  const category=document.getElementById("category").value;
   if(!amount) return alert("أدخل مبلغ صحيح");
 
-  db.ref("finance/transactions").push({
-    type, amount, category,
-    date: Date.now()
+  transactionsRef.push({
+    type, amount, category, date: Date.now()
+  }).then(()=>{
+    alert("تم الحفظ ✅");
+    // تحديث تلقائي في الصفحة الرئيسية إذا كانت مفتوحة
+    if(window.opener && !window.opener.closed){
+      window.opener.transactionsRef.once("value", snap=>{
+        window.opener.updateDashboard(snap.val());
+      });
+    }
+    location.href="index.html"; // إعادة توجيه للـ Dashboard
   });
-
-  alert("تم الحفظ ✅");
-  location.href="index.html";
 }
 </script>
 
