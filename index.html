@@ -17,7 +17,7 @@ nav a{color:var(--muted);text-decoration:none;font-size:14px;}
 nav a.active{color:var(--accent);font-weight:bold;}
 main{padding:15px;}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;}
-.card{background:var(--card);padding:15px;border-radius:14px;}
+.card{background:var(--card);padding:15px;border-radius:14px;margin-bottom:10px;}
 .card h3{margin:0 0 10px;font-size:14px;color:var(--muted);}
 .value{font-size:22px;font-weight:bold;}
 .success{color:var(--success);}
@@ -25,7 +25,9 @@ main{padding:15px;}
 .section{margin-top:20px;}
 .section h2{font-size:16px;margin-bottom:10px;}
 .advice{background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#020617;padding:15px;border-radius:14px;font-weight:bold;}
-@media(max-width:600px){header{font-size:18px;}}
+button{padding:5px 10px;margin-left:5px;border:none;border-radius:6px;cursor:pointer;}
+button.edit{background:#facc15;color:#020617;}
+button.del{background:#ef4444;color:#fff;}
 </style>
 </head>
 <body>
@@ -39,6 +41,7 @@ main{padding:15px;}
 </nav>
 
 <main>
+
   <div class="grid">
     <div class="card">
       <h3>الدخل الكلي</h3>
@@ -58,6 +61,12 @@ main{padding:15px;}
     <h2>📌 نصيحة اليوم</h2>
     <div id="advice" class="advice">جارٍ تحميل البيانات...</div>
   </div>
+
+  <div class="section card">
+    <h2>💼 العمليات المالية</h2>
+    <div id="transactions"></div>
+  </div>
+
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -77,36 +86,86 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const transactionsRef = db.ref("finance/transactions");
+const goalsRef = db.ref("finance/goals");
 
-// ===== Dashboard Update Function =====
+// ===== Dashboard Update =====
 function updateDashboard(data){
-  if(!data) data = {};
+  if(!data) data={};
   let income=0, expense=0, food=0;
   Object.values(data).forEach(t=>{
     if(t.type==="income") income+=Number(t.amount);
-    else{
-      expense+=Number(t.amount);
-      if(t.category==="أكل") food+=Number(t.amount);
-    }
+    else{ expense+=Number(t.amount); if(t.category==="أكل") food+=Number(t.amount); }
   });
-
   document.getElementById("income").innerText=income.toLocaleString();
   document.getElementById("expense").innerText=expense.toLocaleString();
   const balance = income - expense;
   const balanceEl = document.getElementById("balance");
-  balanceEl.innerText=balance.toLocaleString();
+  balanceEl.innerText = balance.toLocaleString();
   balanceEl.className="value "+(balance>=0?"success":"danger");
-
   let advice="أداؤك المالي جيد 👍";
-  if(expense>income) advice="⚠️ مصاريفك أعلى من دخلك، حاول التقليل";
-  else if(food>expense*0.4) advice="🍔 صرفك على الأكل مرتفع هذا الشهر";
-  document.getElementById("advice").innerText=advice;
+  if(expense>income) advice="⚠️ مصاريفك أعلى من دخلك";
+  else if(food>expense*0.4) advice="🍔 صرفك على الأكل مرتفع";
+  document.getElementById("advice").innerText = advice;
 }
 
-// ===== Real-time Listener =====
-transactionsRef.on("value", snapshot=>{
-  updateDashboard(snapshot.val());
+// ===== Display Transactions with Edit/Delete =====
+function displayTransactions(data){
+  const div = document.getElementById("transactions");
+  div.innerHTML="";
+  if(!data) return;
+  Object.entries(data).forEach(([key,t])=>{
+    const date = new Date(t.date);
+    const formattedDate = date.toLocaleDateString()+" "+date.toLocaleTimeString();
+    div.innerHTML+=`
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <b>${t.type==="income"?"💵 دخل":"💸 مصروف"}</b> - ${t.category} - ${t.amount} - ${formattedDate}
+        </div>
+        <div>
+          <button class="edit" onclick="editTransaction('${key}', ${t.amount})">✏️ تعديل</button>
+          <button class="del" onclick="deleteTransaction('${key}')">🗑️ حذف</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// ===== Delete Transaction =====
+function deleteTransaction(id){
+  if(confirm("هل تريد حذف هذه العملية؟")){
+    transactionsRef.child(id).remove();
+  }
+}
+
+// ===== Edit Transaction =====
+function editTransaction(id, oldAmount){
+  const newAmount = prompt("أدخل المبلغ الجديد:", oldAmount);
+  if(newAmount!==null){
+    const diff = Number(newAmount) - oldAmount;
+    transactionsRef.child(id).update({amount:Number(newAmount)});
+    
+    // تحديث الهدف إذا مرتبط
+    goalsRef.once("value", snap=>{
+      const goals = snap.val();
+      if(!goals) return;
+      Object.entries(goals).forEach(([gId, g])=>{
+        if(g.transactions && g.transactions[id]){
+          goalsRef.child(gId).child("transactions").child(id).update({amount:Number(newAmount)});
+          const newSaved = Object.values(g.transactions).reduce((sum,x)=>sum + Number(x.amount),0) + diff;
+          goalsRef.child(gId).update({saved:newSaved});
+        }
+      });
+    });
+  }
+}
+
+// ===== Real-time Listeners =====
+transactionsRef.on("value", snap=>{
+  const data = snap.val();
+  displayTransactions(data);
+  updateDashboard(data);
 });
 </script>
+
 </body>
 </html>
