@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إضافة عملية | مصاريفي</title>
+
+<style>
+body{
+  margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;
+  font-family:Tahoma,Arial;
+}
+header{padding:15px;text-align:center;background:#020617;font-size:20px}
+nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
+nav a{color:#9ca3af;text-decoration:none}
+nav a.active{color:#38bdf8;font-weight:bold}
+main{padding:15px}
+.card{
+  background:#1f2933;padding:15px;border-radius:14px
+}
+input,select,button{
+  width:100%;padding:10px;margin-top:10px;
+  border:none;border-radius:8px;
+}
+input,select{background:#020617;color:#e5e7eb}
+button{
+  background:#38bdf8;color:#020617;font-weight:bold
+}
+</style>
+</head>
+
+<body>
+
+<header>➕ إضافة عملية</header>
+
+<nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="add.html" class="active">إضافة</a>
+  <a href="goals.html">الأهداف</a>
+  <a href="stats.html">تحليل</a>
+</nav>
+
+<main>
+  <div class="card">
+    <select id="type">
+      <option value="income">دخل</option>
+      <option value="expense">مصروف</option>
+    </select>
+
+    <input type="number" id="amount" placeholder="المبلغ">
+
+    <select id="category">
+      <option>أكل</option>
+      <option>مواصلات</option>
+      <option>ترفيه</option>
+      <option>فواتير</option>
+      <option>أخرى</option>
+    </select>
+
+    <button onclick="save()">حفظ</button>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyC7EVNCSl48CQgIC_a8wdC5UG2tKLtNKjQ",
+  authDomain: "garag-system.firebaseapp.com",
+  databaseURL: "https://garag-system-default-rtdb.firebaseio.com",
+  projectId: "garag-system",
+  storageBucket: "garag-system.firebasestorage.app",
+  messagingSenderId: "330947022055",
+  appId: "1:330947022055:web:ce96293502f40d2645a642"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function save(){
+  const type = document.getElementById("type").value;
+  const amount = Number(document.getElementById("amount").value);
+  const category = document.getElementById("category").value;
+
+  if(!amount) return alert("أدخل مبلغ صحيح");
+
+  db.ref("finance/transactions").push({
+    type, amount, category,
+    date: Date.now()
+  });
+
+  alert("تم الحفظ ✅");
+  location.href="index.html";
+}
+</script>
+
+</body>
+</html>

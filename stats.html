@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>التحليل | مصاريفي</title>
+
+<style>
+body{margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;font-family:Tahoma}
+header{padding:15px;text-align:center;background:#020617;font-size:20px}
+nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
+nav a{color:#9ca3af;text-decoration:none}
+nav a.active{color:#38bdf8;font-weight:bold}
+main{padding:15px}
+.card{background:#1f2933;padding:15px;border-radius:14px;margin-bottom:15px}
+.section{margin-top:20px}
+h2{margin-bottom:10px;font-size:16px}
+</style>
+</head>
+
+<body>
+
+<header>📊 التحليل</header>
+
+<nav>
+  <a href="index.html">الرئيسية</a>
+  <a href="add.html">إضافة</a>
+  <a href="goals.html">الأهداف</a>
+  <a href="stats.html" class="active">تحليل</a>
+</nav>
+
+<main>
+  <div class="section card" id="analysis">جارٍ التحليل...</div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ===== Firebase Config =====
+firebase.initializeApp({
+  apiKey: "AIzaSyC7EVNCSl48CQgIC_a8wdC5UG2tKLtNKjQ",
+  databaseURL: "https://garag-system-default-rtdb.firebaseio.com"
+});
+const db = firebase.database();
+
+// ===== Helper Functions =====
+function formatCurrency(amount){ return amount.toLocaleString(); }
+function getWeekStart(d){
+  let date = new Date(d); date.setHours(0,0,0,0);
+  date.setDate(date.getDate() - date.getDay());
+  return date.getTime();
+}
+
+// ===== Main Analysis =====
+db.ref("finance/transactions").on("value", snap=>{
+  const data = snap.val();
+  if(!data){
+    document.getElementById("analysis").innerText="لا توجد بيانات بعد";
+    return;
+  }
+
+  let incomeTotal=0, expenseTotal=0;
+  let categories={}, weekExpense=0, monthExpense=0;
+  const now = Date.now();
+  const oneWeek = 7*24*60*60*1000;
+  const oneMonth = 30*24*60*60*1000;
+
+  Object.values(data).forEach(t=>{
+    if(t.type==="income") incomeTotal += t.amount;
+    else{
+      expenseTotal += t.amount;
+      categories[t.category] = (categories[t.category]||0)+t.amount;
+
+      if(now - t.date <= oneWeek) weekExpense += t.amount;
+      if(now - t.date <= oneMonth) monthExpense += t.amount;
+    }
+  });
+
+  // ===== Top category =====
+  let topCat="", topVal=0;
+  for(let cat in categories){
+    if(categories[cat]>topVal){
+      topVal = categories[cat];
+      topCat = cat;
+    }
+  }
+
+  // ===== Recommendations =====
+  let advice = [];
+  // 1. مصاريف أعلى من الدخل
+  if(expenseTotal > incomeTotal)
+    advice.push("⚠️ مصاريفك أعلى من دخلك");
+
+  // 2. أعلى فئة صرف
+  if(topCat) advice.push(`💡 أكثر فئة صرف: ${topCat} (${((topVal/expenseTotal)*100).toFixed(0)}%)`);
+
+  // 3. نصائح حسب فئات
+  if(categories["أكل"] && categories["أكل"]>expenseTotal*0.35)
+    advice.push("🍔 صرفك على الأكل مرتفع، حاول التقليل");
+
+  // 4. مقارنة الأسبوع والشهر
+  const avgWeek = expenseTotal/Math.max(1,Object.keys(data).length/4);
+  advice.push(`📅 المصاريف هذا الأسبوع: ${formatCurrency(weekExpense)} | هذا الشهر: ${formatCurrency(monthExpense)}`);
+
+  document.getElementById("analysis").innerHTML = advice.join("<br>");
+});
+</script>
+
+</body>
+</html>
