@@ -4,22 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>الأهداف المالية | مصاريفي</title>
-
 <style>
-body{margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;font-family:Tahoma}
-header{padding:15px;text-align:center;background:#020617;font-size:20px}
-nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
-nav a{color:#9ca3af;text-decoration:none}
-nav a.active{color:#38bdf8;font-weight:bold}
-main{padding:15px}
-.card{background:#1f2933;padding:15px;border-radius:14px;margin-bottom:15px}
-input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px}
-input{background:#020617;color:#e5e7eb}
-button{background:#38bdf8;color:#020617;font-weight:bold}
-progress{width:100%;height:20px}
+:root{
+  --bg:#0b1120;--panel:#111827;--card:#1f2933;--accent:#38bdf8;
+  --text:#e5e7eb;--muted:#9ca3af;--success:#22c55e;--danger:#ef4444;
+}
+body{margin:0;background:var(--bg);color:var(--text);direction:rtl;font-family:Tahoma;}
+header{padding:15px;text-align:center;background:#020617;font-size:20px;font-weight:bold;}
+nav{display:flex;justify-content:space-around;background:var(--panel);padding:10px;}
+nav a{color:var(--muted);text-decoration:none;font-size:14px;}
+nav a.active{color:var(--accent);font-weight:bold;}
+main{padding:15px;}
+.card{background:var(--card);padding:15px;border-radius:14px;margin-bottom:10px;}
+input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;font-size:14px;}
+input{background:#020617;color:#e5e7eb;}
+button{background:var(--accent);color:#020617;font-weight:bold;cursor:pointer;}
+.progress-container{background:#111827;border-radius:8px;overflow:hidden;margin-top:5px;}
+progress{width:100%;height:15px;-webkit-appearance:none;appearance:none;}
+progress::-webkit-progress-bar{background:#111827;}
+progress::-webkit-progress-value{background:var(--accent);}
+h3{margin:0;font-size:14px;}
 </style>
 </head>
-
 <body>
 
 <header>🎯 الأهداف المالية</header>
@@ -32,53 +38,105 @@ progress{width:100%;height:20px}
 </nav>
 
 <main>
+  <div class="card">
+    <h3>إضافة هدف جديد</h3>
+    <input type="text" id="goalName" placeholder="اسم الهدف">
+    <input type="number" id="goalTarget" placeholder="المبلغ المطلوب">
+    <button onclick="addGoal()">إضافة الهدف</button>
+  </div>
 
-<div class="card">
-  <input id="name" placeholder="اسم الهدف">
-  <input id="target" type="number" placeholder="المبلغ المطلوب">
-  <button onclick="addGoal()">إضافة هدف</button>
-</div>
-
-<div id="goals"></div>
-
+  <div id="goalsList" class="section"></div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-firebase.initializeApp({
+// ===== Firebase Config =====
+const firebaseConfig = {
   apiKey: "AIzaSyC7EVNCSl48CQgIC_a8wdC5UG2tKLtNKjQ",
   authDomain: "garag-system.firebaseapp.com",
   databaseURL: "https://garag-system-default-rtdb.firebaseio.com",
-  projectId: "garag-system"
-});
+  projectId: "garag-system",
+  storageBucket: "garag-system.firebasestorage.app",
+  messagingSenderId: "330947022055",
+  appId: "1:330947022055:web:ce96293502f40d2645a642"
+};
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const ref = db.ref("finance/goals");
+const goalsRef = db.ref("finance/goals");
+const transactionsRef = db.ref("finance/transactions");
 
+// ===== إضافة هدف جديد =====
 function addGoal(){
-  const name = document.getElementById("name").value;
-  const target = Number(document.getElementById("target").value);
-  if(!name || !target) return;
-  ref.push({name,target,saved:0});
+  const name = document.getElementById("goalName").value.trim();
+  const target = Number(document.getElementById("goalTarget").value);
+  if(!name || !target) return alert("أدخل اسم الهدف والمبلغ");
+  goalsRef.push({name, target, saved:0});
+  document.getElementById("goalName").value="";
+  document.getElementById("goalTarget").value="";
 }
 
-ref.on("value", snap=>{
-  const box=document.getElementById("goals");
-  box.innerHTML="";
-  const data=snap.val();
-  if(!data) return;
-  Object.values(data).forEach(g=>{
-    const percent=Math.min(100,(g.saved/g.target)*100||0);
-    box.innerHTML+=`
-      <div class="card">
-        <b>${g.name}</b>
-        <progress value="${percent}" max="100"></progress>
-        <p>${percent.toFixed(0)}%</p>
-      </div>`;
-  });
-});
-</script>
+// ===== عرض الأهداف مع نسبة التقدم =====
+function displayGoals(goalsData, transactionsData){
+  const list = document.getElementById("goalsList");
+  list.innerHTML="";
+  if(!goalsData) return;
 
+  Object.entries(goalsData).forEach(([goalId, goal])=>{
+    // حساب saved من العمليات إذا موجود
+    let saved = goal.saved || 0;
+
+    // نسبة الإنجاز
+    const percent = Math.min(100, (saved/goal.target)*100);
+
+    list.innerHTML += `
+      <div class="card">
+        <h3>${goal.name} - الهدف: ${goal.target}</h3>
+        <div class="progress-container">
+          <progress value="${percent}" max="100"></progress>
+        </div>
+        <p>${percent.toFixed(0)}% من الهدف</p>
+        <button onclick="deleteGoal('${goalId}')">🗑️ حذف الهدف</button>
+      </div>
+    `;
+  });
+}
+
+// ===== حذف الهدف =====
+function deleteGoal(id){
+  if(confirm("هل تريد حذف هذا الهدف؟")){
+    goalsRef.child(id).remove();
+  }
+}
+
+// ===== تحديث نسبة الإنجاز تلقائيًا =====
+function updateGoalsProgress(){
+  goalsRef.once("value").then(snap=>{
+    const goals = snap.val();
+    transactionsRef.once("value").then(tsnap=>{
+      const transactions = tsnap.val() || {};
+      // حساب saved لكل هدف بناءً على العمليات
+      if(goals){
+        Object.entries(goals).forEach(([goalId, goal])=>{
+          let totalSaved = 0;
+          if(goal.transactions){
+            Object.values(goal.transactions).forEach(tr=>{
+              totalSaved += Number(tr.amount);
+            });
+          }
+          goalsRef.child(goalId).update({saved: totalSaved});
+        });
+      }
+      displayGoals(goals, transactions);
+    });
+  });
+}
+
+// ===== Listeners =====
+goalsRef.on("value", updateGoalsProgress);
+transactionsRef.on("value", updateGoalsProgress);
+
+</script>
 </body>
 </html>
