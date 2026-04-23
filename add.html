@@ -1,70 +1,587 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>إضافة عملية | مصاريفي</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
-body{
-  margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;
-  font-family:Tahoma,Arial;
+/* ===== CSS Variables ===== */
+:root {
+  --bg: #080d1a;
+  --bg2: #0d1526;
+  --panel: #111d35;
+  --card: #162040;
+  --card-hover: #1a2a50;
+  --border: rgba(56,189,248,0.12);
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --accent-glow: rgba(56,189,248,0.25);
+  --text: #e2e8f0;
+  --muted: #7c8db0;
+  --success: #34d399;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 30px rgba(56,189,248,0.15);
+  --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+  --font: 'Cairo', sans-serif;
 }
-header{padding:15px;text-align:center;background:#020617;font-size:20px}
-nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
-nav a{color:#9ca3af;text-decoration:none}
-nav a.active{color:#38bdf8;font-weight:bold}
-main{padding:15px}
-.card{
-  background:#1f2933;padding:15px;border-radius:14px
+
+[data-theme="light"] {
+  --bg: #f0f4ff;
+  --bg2: #e8eeff;
+  --panel: #ffffff;
+  --card: #f8faff;
+  --card-hover: #eef2ff;
+  --border: rgba(99,102,241,0.15);
+  --accent: #3b82f6;
+  --accent2: #8b5cf6;
+  --accent-glow: rgba(59,130,246,0.15);
+  --text: #1e293b;
+  --muted: #64748b;
+  --shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
-input,select,button{
-  width:100%;padding:10px;margin-top:10px;
-  border:none;border-radius:8px;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background var(--transition), color var(--transition);
 }
-input,select{background:#020617;color:#e5e7eb}
-button{
-  background:#38bdf8;color:#020617;font-weight:bold
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(56,189,248,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(129,140,248,0.07) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ===== Header ===== */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8,13,26,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+[data-theme="light"] header { background: rgba(255,255,255,0.85); }
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-logo .logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  -webkit-text-fill-color: #fff;
+  flex-shrink: 0;
+}
+
+.theme-btn {
+  width: 38px; height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.theme-btn:hover { background: var(--card-hover); border-color: var(--accent); }
+
+/* ===== Nav ===== */
+nav {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 20px;
+  position: sticky;
+  top: 64px;
+  z-index: 99;
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+nav a:hover { color: var(--text); background: var(--card); }
+nav a.active {
+  color: var(--accent);
+  background: rgba(56,189,248,0.1);
+  border: 1px solid rgba(56,189,248,0.2);
+}
+
+/* ===== Main ===== */
+main {
+  position: relative;
+  z-index: 1;
+  padding: 32px 20px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ===== Page Title ===== */
+.page-header {
+  text-align: center;
+  margin-bottom: 28px;
+  animation: fadeUp 0.4s ease both;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.page-header p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ===== Type Toggle ===== */
+.type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.4s ease 0.05s both;
+}
+
+.type-btn {
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 2px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+
+.type-btn .type-icon { font-size: 24px; }
+
+.type-btn:hover { color: var(--text); background: var(--card-hover); }
+
+.type-btn.active-income {
+  border-color: var(--success);
+  background: rgba(52,211,153,0.1);
+  color: var(--success);
+}
+
+.type-btn.active-expense {
+  border-color: var(--danger);
+  background: rgba(248,113,113,0.1);
+  color: var(--danger);
+}
+
+/* ===== Form Card ===== */
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  animation: fadeUp 0.4s ease 0.1s both;
+  transition: border-color var(--transition);
+}
+
+.form-card.income-mode { border-color: rgba(52,211,153,0.25); }
+.form-card.expense-mode { border-color: rgba(248,113,113,0.25); }
+
+/* ===== Amount Input ===== */
+.amount-wrap {
+  margin-bottom: 20px;
+}
+
+.amount-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.amount-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.amount-currency {
+  position: absolute;
+  right: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.amount-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 60px 16px 16px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 28px;
+  font-weight: 900;
+  outline: none;
+  text-align: left;
+  direction: ltr;
+  transition: var(--transition);
+}
+
+.amount-input::placeholder { color: var(--border); font-size: 28px; }
+.amount-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.form-card.income-mode .amount-input:focus { border-color: var(--success); box-shadow: 0 0 0 3px rgba(52,211,153,0.2); }
+.form-card.expense-mode .amount-input:focus { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(248,113,113,0.2); }
+
+/* ===== Category Grid ===== */
+.field-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.cat-btn {
+  padding: 10px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition);
+}
+
+.cat-btn .cat-icon { font-size: 18px; }
+.cat-btn:hover { color: var(--text); background: var(--card-hover); }
+
+.cat-btn.selected {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.12);
+  color: var(--accent);
+}
+
+.form-card.income-mode .cat-btn.selected {
+  border-color: var(--success);
+  background: rgba(52,211,153,0.12);
+  color: var(--success);
+}
+
+.form-card.expense-mode .cat-btn.selected {
+  border-color: var(--danger);
+  background: rgba(248,113,113,0.12);
+  color: var(--danger);
+}
+
+/* ===== Note Field ===== */
+.note-wrap { margin-bottom: 24px; }
+
+.note-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  transition: var(--transition);
+}
+
+.note-input::placeholder { color: var(--muted); }
+.note-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+/* ===== Save Button ===== */
+.save-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.save-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.save-btn:hover::before { opacity: 1; }
+.save-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.save-btn:active { transform: translateY(0); }
+
+.save-btn.income-btn {
+  background: linear-gradient(135deg, var(--success), #059669);
+  color: #fff;
+}
+
+.save-btn.expense-btn {
+  background: linear-gradient(135deg, var(--danger), #dc2626);
+  color: #fff;
+}
+
+.save-btn.default-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #020617;
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+
+.save-btn.loading .spinner { display: block; }
+.save-btn.loading .btn-text { opacity: 0.7; }
+
+/* ===== Error Message ===== */
+.error-msg {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+  display: none;
+  animation: fadeUp 0.2s ease;
+}
+
+.error-msg.show { display: block; }
+
+/* ===== Toast ===== */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  animation: toastIn 0.3s ease;
+  min-width: 220px;
+}
+
+.toast.success { border-right: 3px solid var(--success); }
+.toast.error   { border-right: 3px solid var(--danger); }
+.toast.out     { animation: toastOut 0.3s ease forwards; }
+
+/* ===== Animations ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  to { opacity: 0; transform: translateX(20px); }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  main { padding: 20px 14px; }
+  nav a span { display: none; }
+  nav a { padding: 8px 12px; }
+  .amount-input { font-size: 22px; }
+  .category-grid { grid-template-columns: repeat(3, 1fr); }
+  .toast-container { right: 14px; bottom: 14px; }
 }
 </style>
 </head>
-
 <body>
 
-<header>➕ إضافة عملية</header>
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
 
+<!-- Header -->
+<header>
+  <div class="header-logo">
+    <div class="logo-icon">💰</div>
+    مصاريفي
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+</header>
+
+<!-- Nav -->
 <nav>
-  <a href="index.html">الرئيسية</a>
-  <a href="add.html" class="active">إضافة</a>
-  <a href="goals.html">الأهداف</a>
-  <a href="stats.html">تحليل</a>
+  <a href="index.html"><span>🏠</span> الرئيسية</a>
+  <a href="add.html" class="active"><span>➕</span> إضافة</a>
+  <a href="goals.html"><span>🎯</span> الأهداف</a>
+  <a href="stats.html"><span>📊</span> تحليل</a>
 </nav>
 
+<!-- Main -->
 <main>
-  <div class="card">
-    <select id="type">
-      <option value="income">دخل</option>
-      <option value="expense">مصروف</option>
-    </select>
 
-    <input type="number" id="amount" placeholder="المبلغ">
+  <div class="page-header">
+    <h1>➕ إضافة عملية</h1>
+    <p>سجّل دخلك أو مصروفك بسهولة</p>
+  </div>
 
-    <select id="category">
-      <option>أكل</option>
-      <option>مواصلات</option>
-      <option>ترفيه</option>
-      <option>فواتير</option>
-      <option>أخرى</option>
-    </select>
+  <!-- Type Toggle -->
+  <div class="type-toggle">
+    <button class="type-btn active-income" id="incomeBtn" onclick="setType('income')">
+      <span class="type-icon">💵</span>
+      دخل
+    </button>
+    <button class="type-btn" id="expenseBtn" onclick="setType('expense')">
+      <span class="type-icon">💸</span>
+      مصروف
+    </button>
+  </div>
 
-    <button onclick="save()">حفظ</button>
+  <!-- Form -->
+  <div class="form-card income-mode" id="formCard">
+
+    <!-- Amount -->
+    <div class="amount-wrap">
+      <span class="amount-label">المبلغ</span>
+      <div class="amount-field">
+        <span class="amount-currency">IQD</span>
+        <input type="number" class="amount-input" id="amount" placeholder="0" min="1" oninput="clearError()">
+      </div>
+      <div class="error-msg" id="amountError">⚠️ يرجى إدخال مبلغ صحيح وموجب</div>
+    </div>
+
+    <!-- Category -->
+    <span class="field-label">الفئة</span>
+    <div class="category-grid" id="categoryGrid">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Note -->
+    <div class="note-wrap">
+      <span class="field-label">ملاحظة (اختياري)</span>
+      <textarea class="note-input" id="note" rows="2" placeholder="أضف ملاحظة..."></textarea>
+    </div>
+
+    <!-- Save -->
+    <button class="save-btn income-btn" id="saveBtn" onclick="save()">
+      <div class="spinner"></div>
+      <span class="btn-text">💾 حفظ العملية</span>
+    </button>
+
   </div>
 </main>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyC7EVNCSl48CQgIC_a8wdC5UG2tKLtNKjQ",
   authDomain: "garag-system.firebaseapp.com",
@@ -77,22 +594,152 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-function save(){
-  const type = document.getElementById("type").value;
-  const amount = Number(document.getElementById("amount").value);
-  const category = document.getElementById("category").value;
+// ===== State =====
+let currentType = 'income';
+let selectedCategory = '';
 
-  if(!amount) return alert("أدخل مبلغ صحيح");
+// ===== Categories =====
+const expenseCategories = [
+  { id: 'أكل',       icon: '🍔' },
+  { id: 'مواصلات',  icon: '🚗' },
+  { id: 'ترفيه',    icon: '🎮' },
+  { id: 'فواتير',   icon: '📄' },
+  { id: 'ملابس',    icon: '👔' },
+  { id: 'صحة',      icon: '💊' },
+  { id: 'تعليم',    icon: '📚' },
+  { id: 'تسوق',     icon: '🛍️' },
+  { id: 'أخرى',     icon: '💰' },
+];
+
+const incomeCategories = [
+  { id: 'راتب',     icon: '💼' },
+  { id: 'مشروع',   icon: '🚀' },
+  { id: 'هدية',    icon: '🎁' },
+  { id: 'استثمار', icon: '📈' },
+  { id: 'عمل حر',  icon: '💻' },
+  { id: 'أخرى',    icon: '💰' },
+];
+
+// ===== Theme =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', html.dataset.theme);
+}
+
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+})();
+
+// ===== Toast =====
+function showToast(message, type = 'info') {
+  const icons = { success: '✅', error: '❌' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ===== Set Type =====
+function setType(type) {
+  currentType = type;
+  selectedCategory = '';
+
+  const incomeBtn = document.getElementById('incomeBtn');
+  const expenseBtn = document.getElementById('expenseBtn');
+  const formCard = document.getElementById('formCard');
+  const saveBtn = document.getElementById('saveBtn');
+
+  if (type === 'income') {
+    incomeBtn.className = 'type-btn active-income';
+    expenseBtn.className = 'type-btn';
+    formCard.className = 'form-card income-mode';
+    saveBtn.className = 'save-btn income-btn';
+    saveBtn.querySelector('.btn-text').textContent = '💾 حفظ الدخل';
+  } else {
+    expenseBtn.className = 'type-btn active-expense';
+    incomeBtn.className = 'type-btn';
+    formCard.className = 'form-card expense-mode';
+    saveBtn.className = 'save-btn expense-btn';
+    saveBtn.querySelector('.btn-text').textContent = '💾 حفظ المصروف';
+  }
+
+  renderCategories();
+}
+
+// ===== Render Categories =====
+function renderCategories() {
+  const cats = currentType === 'income' ? incomeCategories : expenseCategories;
+  const grid = document.getElementById('categoryGrid');
+  grid.innerHTML = cats.map(c => `
+    <button class="cat-btn${selectedCategory === c.id ? ' selected' : ''}"
+            onclick="selectCategory('${c.id}')">
+      <span class="cat-icon">${c.icon}</span>
+      ${c.id}
+    </button>
+  `).join('');
+}
+
+// ===== Select Category =====
+function selectCategory(id) {
+  selectedCategory = id;
+  renderCategories();
+}
+
+// ===== Error Handling =====
+function clearError() {
+  document.getElementById('amountError').classList.remove('show');
+}
+
+// ===== Save =====
+function save() {
+  const amountInput = document.getElementById('amount');
+  const amount = Number(amountInput.value);
+  const note = document.getElementById('note').value.trim();
+  const btn = document.getElementById('saveBtn');
+
+  // Validate
+  if (!amount || amount <= 0 || isNaN(amount)) {
+    document.getElementById('amountError').classList.add('show');
+    amountInput.focus();
+    return;
+  }
+
+  const category = selectedCategory || (currentType === 'income' ? 'راتب' : 'أخرى');
+
+  // Loading state
+  btn.disabled = true;
+  btn.classList.add('loading');
 
   db.ref("finance/transactions").push({
-    type, amount, category,
+    type: currentType,
+    amount,
+    category,
+    note: note || '',
     date: Date.now()
+  })
+  .then(() => {
+    showToast('تم حفظ العملية بنجاح ✅', 'success');
+    setTimeout(() => { location.href = 'index.html'; }, 1200);
+  })
+  .catch(() => {
+    showToast('فشل الحفظ، تحقق من اتصالك', 'error');
+    btn.disabled = false;
+    btn.classList.remove('loading');
   });
-
-  alert("تم الحفظ ✅");
-  location.href="index.html";
 }
-</script>
 
+// ===== Init =====
+renderCategories();
+</script>
 </body>
 </html>
