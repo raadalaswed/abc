@@ -1,114 +1,497 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>التحليل | مصاريفي</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{margin:0;background:#0b1120;color:#e5e7eb;direction:rtl;font-family:Tahoma}
-header{padding:15px;text-align:center;background:#020617;font-size:20px}
-nav{display:flex;justify-content:space-around;background:#111827;padding:10px}
-nav a{color:#9ca3af;text-decoration:none}
-nav a.active{color:#38bdf8;font-weight:bold}
-main{padding:15px}
-.card{background:#1f2933;padding:15px;border-radius:14px;margin-bottom:15px}
-.section{margin-top:20px}
-h2{margin-bottom:10px;font-size:16px}
-canvas{background:#1f2933;border-radius:14px;margin-top:15px}
+:root {
+  --bg:#080d1a; --bg2:#0d1526; --panel:#111d35; --card:#162040;
+  --card-hover:#1a2a50; --border:rgba(56,189,248,0.12); --accent:#38bdf8;
+  --accent2:#818cf8; --accent-glow:rgba(56,189,248,0.25); --text:#e2e8f0;
+  --muted:#7c8db0; --success:#34d399; --danger:#f87171; --warning:#fbbf24;
+  --radius:16px; --radius-sm:10px; --shadow:0 8px 32px rgba(0,0,0,0.4);
+  --shadow-glow:0 0 30px rgba(56,189,248,0.15);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1); --font:'Cairo',sans-serif;
+}
+[data-theme="light"] {
+  --bg:#f0f4ff; --bg2:#e8eeff; --panel:#ffffff; --card:#f8faff;
+  --card-hover:#eef2ff; --border:rgba(99,102,241,0.15); --accent:#3b82f6;
+  --accent2:#8b5cf6; --accent-glow:rgba(59,130,246,0.15); --text:#1e293b;
+  --muted:#64748b; --shadow:0 8px 32px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition);}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 20%,rgba(56,189,248,0.07) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(129,140,248,0.07) 0%,transparent 60%);pointer-events:none;z-index:0;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+header{position:sticky;top:0;z-index:100;background:rgba(8,13,26,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+[data-theme="light"] header{background:rgba(255,255,255,0.85);}
+.header-logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header-logo .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;-webkit-text-fill-color:#fff;flex-shrink:0;}
+.theme-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.theme-btn:hover{background:var(--card-hover);border-color:var(--accent);}
+
+nav{background:var(--panel);border-bottom:1px solid var(--border);display:flex;justify-content:center;gap:4px;padding:10px 20px;position:sticky;top:64px;z-index:99;}
+nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:8px 16px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:6px;transition:var(--transition);}
+nav a:hover{color:var(--text);background:var(--card);}
+nav a.active{color:var(--accent);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);}
+
+main{position:relative;z-index:1;padding:24px 20px;max-width:960px;margin:0 auto;}
+
+/* Page header */
+.page-header{margin-bottom:24px;animation:fadeUp 0.4s ease both;}
+.page-header h1{font-size:22px;font-weight:900;margin-bottom:4px;}
+.page-header p{font-size:13px;color:var(--muted);}
+
+/* Summary grid */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.sum-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;animation:fadeUp 0.4s ease both;transition:var(--transition);}
+.sum-card:nth-child(2){animation-delay:0.06s;}
+.sum-card:nth-child(3){animation-delay:0.12s;}
+.sum-card:nth-child(4){animation-delay:0.18s;}
+.sum-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:var(--shadow-glow);}
+.sum-icon{font-size:20px;margin-bottom:8px;}
+.sum-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
+.sum-val{font-size:18px;font-weight:900;}
+.sum-val.g{color:var(--success);}
+.sum-val.r{color:var(--danger);}
+.sum-val.b{color:var(--accent);}
+.sum-val.w{color:var(--warning);}
+
+/* Section */
+.section{margin-bottom:24px;}
+.section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--text);}
+.section-title span{font-size:18px;}
+
+/* Insight cards */
+.insights{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.insight{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;animation:fadeUp 0.4s ease both;transition:var(--transition);}
+.insight:hover{background:var(--card-hover);}
+.insight-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.insight-icon.warn{background:rgba(251,191,36,0.15);}
+.insight-icon.ok{background:rgba(52,211,153,0.15);}
+.insight-icon.info{background:rgba(56,189,248,0.15);}
+.insight-icon.bad{background:rgba(248,113,113,0.15);}
+.insight-text{font-size:13px;font-weight:600;line-height:1.6;}
+
+/* Charts grid */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.chart-wrap{position:relative;height:220px;}
+
+/* Category bars */
+.cat-bars{display:flex;flex-direction:column;gap:10px;}
+.cat-row{display:flex;flex-direction:column;gap:4px;}
+.cat-row-header{display:flex;justify-content:space-between;font-size:12px;font-weight:700;}
+.cat-row-label{color:var(--text);}
+.cat-row-val{color:var(--muted);}
+.bar-track{background:var(--bg2);border-radius:99px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+
+/* Period tabs */
+.period-tabs{display:flex;gap:6px;margin-bottom:14px;}
+.p-tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:var(--transition);}
+.p-tab.active{background:rgba(56,189,248,0.15);border-color:var(--accent);color:var(--accent);}
+.p-tab:hover:not(.active){background:var(--card-hover);color:var(--text);}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s ease;}
+.loading-overlay.hidden{opacity:0;pointer-events:none;}
+.loader{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.loading-text{font-size:14px;color:var(--muted);font-weight:600;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+@media(max-width:640px){
+  .summary-grid{grid-template-columns:1fr 1fr;}
+  .charts-grid{grid-template-columns:1fr;}
+  nav a span{display:none;}
+  nav a{padding:8px 12px;}
+  main{padding:16px 14px;}
+}
 </style>
 </head>
-
 <body>
 
-<header>📊 التحليل</header>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader"></div>
+  <div class="loading-text">جارٍ تحليل البيانات...</div>
+</div>
+
+<header>
+  <div class="header-logo">
+    <div class="logo-icon">💰</div>
+    مصاريفي
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+</header>
 
 <nav>
-  <a href="index.html">الرئيسية</a>
-  <a href="add.html">إضافة</a>
-  <a href="goals.html">الأهداف</a>
-  <a href="stats.html" class="active">تحليل</a>
+  <a href="index.html"><span>🏠</span> الرئيسية</a>
+  <a href="add.html"><span>➕</span> إضافة</a>
+  <a href="goals.html"><span>🎯</span> الأهداف</a>
+  <a href="stats.html" class="active"><span>📊</span> تحليل</a>
 </nav>
 
 <main>
-  <div class="section card" id="analysis">جارٍ التحليل...</div>
-  <div class="card">
-    <canvas id="expenseChart" width="400" height="400"></canvas>
+
+  <div class="page-header">
+    <h1>📊 تحليل مالي</h1>
+    <p>نظرة شاملة على وضعك المالي</p>
   </div>
+
+  <!-- Summary -->
+  <div class="summary-grid" id="summaryGrid">
+    <div class="sum-card"><div class="sum-icon">💵</div><div class="sum-label">إجمالي الدخل</div><div class="sum-val g" id="sIncome">0</div></div>
+    <div class="sum-card"><div class="sum-icon">💸</div><div class="sum-label">إجمالي المصاريف</div><div class="sum-val r" id="sExpense">0</div></div>
+    <div class="sum-card"><div class="sum-icon">📅</div><div class="sum-label">مصاريف هذا الشهر</div><div class="sum-val b" id="sMonth">0</div></div>
+    <div class="sum-card"><div class="sum-icon">📆</div><div class="sum-label">مصاريف هذا الأسبوع</div><div class="sum-val w" id="sWeek">0</div></div>
+  </div>
+
+  <!-- Insights -->
+  <div class="section">
+    <div class="section-title"><span>💡</span> التوصيات الذكية</div>
+    <div class="insights" id="insights"></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title"><span>🍩</span> توزيع المصاريف</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span>📈</span> الدخل مقابل المصاريف</div>
+      <div class="period-tabs">
+        <button class="p-tab active" onclick="switchPeriod('weekly',this)">أسبوعي</button>
+        <button class="p-tab" onclick="switchPeriod('monthly',this)">شهري</button>
+      </div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Category Bars -->
+  <div class="section">
+    <div class="section-title"><span>📂</span> المصاريف حسب الفئة</div>
+    <div class="chart-card">
+      <div class="cat-bars" id="catBars"></div>
+    </div>
+  </div>
+
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 // ===== Firebase Config =====
 firebase.initializeApp({
   apiKey: "AIzaSyC7EVNCSl48CQgIC_a8wdC5UG2tKLtNKjQ",
-  databaseURL: "https://garag-system-default-rtdb.firebaseio.com"
+  authDomain: "garag-system.firebaseapp.com",
+  databaseURL: "https://garag-system-default-rtdb.firebaseio.com",
+  projectId: "garag-system",
+  storageBucket: "garag-system.firebasestorage.app",
+  messagingSenderId: "330947022055",
+  appId: "1:330947022055:web:ce96293502f40d2645a642"
 });
 const db = firebase.database();
 
-// ===== Helper Functions =====
-function formatCurrency(amount){ return amount.toLocaleString(); }
-function getWeekStart(d){ let date = new Date(d); date.setHours(0,0,0,0); date.setDate(date.getDate() - date.getDay()); return date.getTime(); }
+// ===== State =====
+let allData = {};
+let pieChart = null, lineChart = null;
+let chartPeriod = 'weekly';
 
-// ===== Chart Setup =====
-const ctx = document.getElementById('expenseChart').getContext('2d');
-let chart = new Chart(ctx, {
-    type: 'pie',
-    data: { labels: [], datasets:[{data:[], backgroundColor:['#38bdf8','#facc15','#ef4444','#22c55e','#a78bfa']}] },
-    options:{responsive:true, plugins:{legend:{position:'bottom'}}}
-});
+// ===== Theme =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', html.dataset.theme);
+  rebuildCharts();
+}
 
-// ===== Main Analysis =====
-function analyzeTransactions(data){
-  if(!data){
-    document.getElementById("analysis").innerText="لا توجد بيانات بعد";
-    chart.data.labels=[]; chart.data.datasets[0].data=[]; chart.update();
-    return;
-  }
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+})();
 
-  let incomeTotal=0, expenseTotal=0;
-  let categories={}, weekExpense=0, monthExpense=0;
+// ===== Helpers =====
+function formatCurrency(n) { return Number(n).toLocaleString(); }
+function getWeekStart(d) {
+  const date = new Date(d);
+  date.setHours(0,0,0,0);
+  date.setDate(date.getDate() - date.getDay());
+  return date.getTime();
+}
+
+const PALETTE = ['#38bdf8','#818cf8','#34d399','#fbbf24','#f87171','#a78bfa','#fb923c','#4ade80','#f472b6','#60a5fa'];
+
+// ===== Analysis =====
+function analyzeTransactions(data) {
+  if (!data) data = {};
+  let incomeTotal = 0, expenseTotal = 0;
+  const categories = {};
+  let weekExpense = 0, monthExpense = 0;
   const now = Date.now();
-  const oneWeek = 7*24*60*60*1000;
-  const oneMonth = 30*24*60*60*1000;
+  const oneWeek = 7 * 24 * 60 * 60 * 1000;
+  const oneMonth = 30 * 24 * 60 * 60 * 1000;
 
-  Object.values(data).forEach(t=>{
-    if(t.type==="income") incomeTotal += t.amount;
-    else{
-      expenseTotal += t.amount;
-      categories[t.category] = (categories[t.category]||0)+t.amount;
-      if(now - t.date <= oneWeek) weekExpense += t.amount;
-      if(now - t.date <= oneMonth) monthExpense += t.amount;
+  Object.values(data).forEach(t => {
+    const amt = Number(t.amount);
+    if (t.type === 'income') {
+      incomeTotal += amt;
+    } else {
+      expenseTotal += amt;
+      categories[t.category] = (categories[t.category] || 0) + amt;
+      if (now - t.date <= oneWeek) weekExpense += amt;
+      if (now - t.date <= oneMonth) monthExpense += amt;
     }
   });
 
-  // ===== Top category =====
-  let topCat="", topVal=0;
-  for(let cat in categories){ if(categories[cat]>topVal){ topVal=categories[cat]; topCat=cat; } }
+  // Summary
+  document.getElementById('sIncome').textContent = formatCurrency(incomeTotal);
+  document.getElementById('sExpense').textContent = formatCurrency(expenseTotal);
+  document.getElementById('sMonth').textContent = formatCurrency(monthExpense);
+  document.getElementById('sWeek').textContent = formatCurrency(weekExpense);
 
-  // ===== Recommendations =====
-  let advice = [];
-  if(expenseTotal > incomeTotal) advice.push("⚠️ مصاريفك أعلى من دخلك");
-  if(topCat) advice.push(`💡 أكثر فئة صرف: ${topCat} (${((topVal/expenseTotal)*100).toFixed(0)}%)`);
-  if(categories["أكل"] && categories["أكل"]>expenseTotal*0.35) advice.push("🍔 صرفك على الأكل مرتفع، حاول التقليل");
-  const avgWeek = expenseTotal/Math.max(1,Object.keys(data).length/4);
-  advice.push(`📅 المصاريف هذا الأسبوع: ${formatCurrency(weekExpense)} | هذا الشهر: ${formatCurrency(monthExpense)}`);
-  document.getElementById("analysis").innerHTML = advice.join("<br>");
+  // Insights
+  buildInsights(incomeTotal, expenseTotal, weekExpense, monthExpense, categories);
 
-  // ===== Update Pie Chart =====
-  chart.data.labels = Object.keys(categories);
-  chart.data.datasets[0].data = Object.values(categories);
-  chart.update();
+  // Charts
+  buildPieChart(categories);
+  buildLineChart(chartPeriod);
+  buildCatBars(categories, expenseTotal);
+}
+
+// ===== Insights =====
+function buildInsights(income, expense, weekExp, monthExp, categories) {
+  const container = document.getElementById('insights');
+  const items = [];
+
+  if (income === 0) {
+    items.push({ icon: '📥', cls: 'info', text: 'لم يتم تسجيل أي دخل بعد. ابدأ بإضافة مصادر دخلك!' });
+  } else if (expense > income) {
+    items.push({ icon: '⚠️', cls: 'bad', text: `مصاريفك تتجاوز دخلك بمقدار ${formatCurrency(expense - income)} — راجع ميزانيتك فوراً` });
+  } else if (expense / income > 0.8) {
+    items.push({ icon: '🔴', cls: 'warn', text: 'أنت تنفق أكثر من 80% من دخلك — حاول تقليص المصاريف غير الضرورية' });
+  } else {
+    items.push({ icon: '✅', cls: 'ok', text: `رصيدك الحالي ${formatCurrency(income - expense)} — أداؤك المالي جيد` });
+  }
+
+  // Top category
+  let topCat = '', topVal = 0;
+  for (const cat in categories) {
+    if (categories[cat] > topVal) { topVal = categories[cat]; topCat = cat; }
+  }
+  if (topCat && expense > 0) {
+    const pct = ((topVal / expense) * 100).toFixed(0);
+    items.push({ icon: '💡', cls: 'info', text: `أكثر فئة صرفاً: ${topCat} بنسبة ${pct}% من إجمالي مصاريفك` });
+  }
+
+  if (categories['أكل'] && categories['أكل'] > expense * 0.35) {
+    items.push({ icon: '🍔', cls: 'warn', text: 'صرفك على الأكل مرتفع (أكثر من 35%) — فكّر في الطبخ المنزلي' });
+  }
+
+  items.push({ icon: '📅', cls: 'info', text: `مصاريف هذا الأسبوع: ${formatCurrency(weekExp)} | هذا الشهر: ${formatCurrency(monthExp)}` });
+
+  if (income > 0 && expense / income < 0.5) {
+    items.push({ icon: '🌟', cls: 'ok', text: 'أنت توفر أكثر من 50% من دخلك — فكّر في الاستثمار!' });
+  }
+
+  container.innerHTML = items.map((item, i) => `
+    <div class="insight" style="animation-delay:${i * 0.07}s">
+      <div class="insight-icon ${item.cls}">${item.icon}</div>
+      <div class="insight-text">${item.text}</div>
+    </div>
+  `).join('');
+}
+
+// ===== Pie Chart =====
+function buildPieChart(categories) {
+  const labels = Object.keys(categories);
+  const values = Object.values(categories);
+
+  if (pieChart) { pieChart.destroy(); }
+
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const textColor = isDark ? '#7c8db0' : '#64748b';
+
+  pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: PALETTE,
+        borderColor: isDark ? '#162040' : '#f8faff',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor, font: { family: 'Cairo', size: 11 }, usePointStyle: true, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: '#162040', titleColor: '#e2e8f0', bodyColor: '#7c8db0',
+          borderColor: 'rgba(56,189,248,0.2)', borderWidth: 1,
+          titleFont: { family: 'Cairo', weight: '700' }, bodyFont: { family: 'Cairo' },
+          callbacks: { label: ctx => ` ${ctx.label}: ${Number(ctx.raw).toLocaleString()}` }
+        }
+      }
+    }
+  });
+}
+
+// ===== Line Chart =====
+function buildLineChart(mode) {
+  const txns = Object.values(allData);
+  const now = new Date();
+  const labels = [], incomeData = [], expenseData = [];
+
+  if (mode === 'weekly') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('ar-IQ', { weekday: 'short' }));
+      const dayStr = d.toDateString();
+      let inc = 0, exp = 0;
+      txns.forEach(t => {
+        if (new Date(t.date).toDateString() === dayStr) {
+          if (t.type === 'income') inc += Number(t.amount);
+          else exp += Number(t.amount);
+        }
+      });
+      incomeData.push(inc); expenseData.push(exp);
+    }
+  } else {
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      labels.push(d.toLocaleDateString('ar-IQ', { month: 'short' }));
+      let inc = 0, exp = 0;
+      txns.forEach(t => {
+        const td = new Date(t.date);
+        if (td.getMonth() === d.getMonth() && td.getFullYear() === d.getFullYear()) {
+          if (t.type === 'income') inc += Number(t.amount);
+          else exp += Number(t.amount);
+        }
+      });
+      incomeData.push(inc); expenseData.push(exp);
+    }
+  }
+
+  if (lineChart) { lineChart.destroy(); }
+
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#7c8db0' : '#64748b';
+
+  lineChart = new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'دخل',
+          data: incomeData,
+          borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.1)',
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#34d399',
+          tension: 0.4, fill: true
+        },
+        {
+          label: 'مصروف',
+          data: expenseData,
+          borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)',
+          borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#f87171',
+          tension: 0.4, fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: 'Cairo', size: 11 }, usePointStyle: true } },
+        tooltip: {
+          backgroundColor: '#162040', titleColor: '#e2e8f0', bodyColor: '#7c8db0',
+          borderColor: 'rgba(56,189,248,0.2)', borderWidth: 1,
+          titleFont: { family: 'Cairo', weight: '700' }, bodyFont: { family: 'Cairo' },
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString()}` }
+        }
+      },
+      scales: {
+        x: { ticks: { color: textColor, font: { family: 'Cairo', size: 11 } }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor, font: { family: 'Cairo', size: 11 } }, grid: { color: gridColor } }
+      }
+    }
+  });
+}
+
+// ===== Category Bars =====
+function buildCatBars(categories, total) {
+  const sorted = Object.entries(categories).sort(([,a],[,b]) => b - a);
+  const container = document.getElementById('catBars');
+  if (!sorted.length) { container.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">لا توجد بيانات بعد</p>'; return; }
+
+  container.innerHTML = sorted.map(([cat, val], i) => {
+    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+    const color = PALETTE[i % PALETTE.length];
+    return `
+      <div class="cat-row">
+        <div class="cat-row-header">
+          <span class="cat-row-label">${cat}</span>
+          <span class="cat-row-val">${formatCurrency(val)} (${pct}%)</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${color},${PALETTE[(i+1)%PALETTE.length]})"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ===== Switch Period =====
+function switchPeriod(mode, btn) {
+  chartPeriod = mode;
+  document.querySelectorAll('.p-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildLineChart(mode);
+}
+
+// ===== Rebuild Charts (theme change) =====
+function rebuildCharts() {
+  const cats = {};
+  let expTotal = 0;
+  Object.values(allData).forEach(t => {
+    if (t.type !== 'income') {
+      cats[t.category] = (cats[t.category] || 0) + Number(t.amount);
+      expTotal += Number(t.amount);
+    }
+  });
+  buildPieChart(cats);
+  buildLineChart(chartPeriod);
 }
 
 // ===== Real-time Listener =====
-db.ref("finance/transactions").on("value", snap=>{
-  analyzeTransactions(snap.val());
+db.ref("finance/transactions").on("value", snap => {
+  allData = snap.val() || {};
+  analyzeTransactions(allData);
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('hidden');
+  setTimeout(() => overlay.remove(), 400);
 });
 </script>
-
 </body>
 </html>
