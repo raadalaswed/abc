@@ -1,51 +1,226 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>الأهداف المالية | مصاريفي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b1120;--panel:#111827;--card:#1f2933;--accent:#38bdf8;
-  --text:#e5e7eb;--muted:#9ca3af;--success:#22c55e;--danger:#ef4444;
+:root {
+  --bg:#080d1a; --bg2:#0d1526; --panel:#111d35; --card:#162040;
+  --card-hover:#1a2a50; --border:rgba(56,189,248,0.12); --accent:#38bdf8;
+  --accent2:#818cf8; --accent-glow:rgba(56,189,248,0.25); --text:#e2e8f0;
+  --muted:#7c8db0; --success:#34d399; --danger:#f87171; --warning:#fbbf24;
+  --radius:16px; --radius-sm:10px; --shadow:0 8px 32px rgba(0,0,0,0.4);
+  --shadow-glow:0 0 30px rgba(56,189,248,0.15);
+  --transition:0.25s cubic-bezier(0.4,0,0.2,1); --font:'Cairo',sans-serif;
 }
-body{margin:0;background:var(--bg);color:var(--text);direction:rtl;font-family:Tahoma;}
-header{padding:15px;text-align:center;background:#020617;font-size:20px;font-weight:bold;}
-nav{display:flex;justify-content:space-around;background:var(--panel);padding:10px;}
-nav a{color:var(--muted);text-decoration:none;font-size:14px;}
-nav a.active{color:var(--accent);font-weight:bold;}
-main{padding:15px;}
-.card{background:var(--card);padding:15px;border-radius:14px;margin-bottom:10px;}
-input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:8px;font-size:14px;}
-input{background:#020617;color:#e5e7eb;}
-button{background:var(--accent);color:#020617;font-weight:bold;cursor:pointer;}
-.progress-container{background:#111827;border-radius:8px;overflow:hidden;margin-top:5px;}
-progress{width:100%;height:15px;-webkit-appearance:none;appearance:none;}
-progress::-webkit-progress-bar{background:#111827;}
-progress::-webkit-progress-value{background:var(--accent);}
-h3{margin:0;font-size:14px;}
+[data-theme="light"] {
+  --bg:#f0f4ff; --bg2:#e8eeff; --panel:#ffffff; --card:#f8faff;
+  --card-hover:#eef2ff; --border:rgba(99,102,241,0.15); --accent:#3b82f6;
+  --accent2:#8b5cf6; --accent-glow:rgba(59,130,246,0.15); --text:#1e293b;
+  --muted:#64748b; --shadow:0 8px 32px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition);}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 80% 20%,rgba(56,189,248,0.07) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 20% 80%,rgba(129,140,248,0.07) 0%,transparent 60%);pointer-events:none;z-index:0;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+header{position:sticky;top:0;z-index:100;background:rgba(8,13,26,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+[data-theme="light"] header{background:rgba(255,255,255,0.85);}
+.header-logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header-logo .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;-webkit-text-fill-color:#fff;flex-shrink:0;}
+.theme-btn{width:38px;height:38px;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.theme-btn:hover{background:var(--card-hover);border-color:var(--accent);}
+
+nav{background:var(--panel);border-bottom:1px solid var(--border);display:flex;justify-content:center;gap:4px;padding:10px 20px;position:sticky;top:64px;z-index:99;}
+nav a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:8px 16px;border-radius:var(--radius-sm);display:flex;align-items:center;gap:6px;transition:var(--transition);}
+nav a:hover{color:var(--text);background:var(--card);}
+nav a.active{color:var(--accent);background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);}
+
+main{position:relative;z-index:1;padding:24px 20px;max-width:680px;margin:0 auto;}
+
+/* Page header */
+.page-header{margin-bottom:24px;animation:fadeUp 0.4s ease both;}
+.page-header h1{font-size:22px;font-weight:900;margin-bottom:4px;}
+.page-header p{font-size:13px;color:var(--muted);}
+
+/* Add Goal Card */
+.add-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:24px;animation:fadeUp 0.4s ease 0.05s both;}
+.add-card-title{font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;}
+.field input{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:var(--font);font-size:14px;font-weight:600;outline:none;transition:var(--transition);width:100%;}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+.field input::placeholder{color:var(--muted);font-weight:400;}
+
+/* Emoji Picker */
+.emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.emoji-opt{width:38px;height:38px;border-radius:10px;border:2px solid var(--border);background:var(--bg2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.emoji-opt:hover{border-color:var(--accent);background:var(--card-hover);}
+.emoji-opt.selected{border-color:var(--accent);background:rgba(56,189,248,0.15);}
+
+.add-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#020617;font-family:var(--font);font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:var(--transition);position:relative;overflow:hidden;}
+.add-btn::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0.12);opacity:0;transition:opacity var(--transition);}
+.add-btn:hover::before{opacity:1;}
+.add-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+.add-btn:active{transform:translateY(0);}
+.add-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:#020617;border-radius:50%;animation:spin 0.7s linear infinite;display:none;}
+.add-btn.loading .spinner{display:block;}
+
+.error-msg{color:var(--danger);font-size:12px;font-weight:600;margin-top:-8px;margin-bottom:10px;display:none;}
+.error-msg.show{display:block;}
+
+/* Section */
+.section-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;color:var(--text);}
+.section-title span{font-size:18px;}
+
+/* Goal Card */
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;animation:fadeUp 0.35s ease both;transition:var(--transition);}
+.goal-card:hover{background:var(--card-hover);border-color:rgba(56,189,248,0.25);}
+.goal-card.completed{border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.05);}
+
+.goal-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.goal-emoji{width:44px;height:44px;border-radius:12px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.goal-info{flex:1;min-width:0;}
+.goal-name{font-size:15px;font-weight:800;margin-bottom:2px;}
+.goal-meta{font-size:12px;color:var(--muted);}
+.goal-badge{padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;flex-shrink:0;}
+.goal-badge.done{background:rgba(52,211,153,0.15);color:var(--success);border:1px solid rgba(52,211,153,0.3);}
+.goal-badge.progress{background:rgba(56,189,248,0.12);color:var(--accent);border:1px solid rgba(56,189,248,0.2);}
+
+/* Progress */
+.progress-row{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px;}
+.progress-pct{color:var(--accent);}
+.goal-card.completed .progress-pct{color:var(--success);}
+.progress-amounts{color:var(--muted);}
+.progress-track{background:var(--bg2);border-radius:99px;height:10px;overflow:hidden;margin-bottom:12px;}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s cubic-bezier(0.4,0,0.2,1);}
+.goal-card.completed .progress-fill{background:linear-gradient(90deg,var(--success),#059669);}
+
+.goal-footer{display:flex;justify-content:space-between;align-items:center;}
+.goal-remaining{font-size:12px;color:var(--muted);}
+.goal-remaining strong{color:var(--warning);}
+.del-btn{padding:6px 12px;border-radius:8px;border:1px solid rgba(248,113,113,0.25);background:rgba(248,113,113,0.08);color:var(--danger);font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;transition:var(--transition);}
+.del-btn:hover{background:rgba(248,113,113,0.18);border-color:var(--danger);}
+
+/* Empty State */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .empty-icon{font-size:52px;margin-bottom:12px;}
+.empty-state p{font-size:14px;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity var(--transition);backdrop-filter:blur(4px);}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:380px;transform:translateY(20px) scale(0.97);transition:transform var(--transition);box-shadow:var(--shadow);}
+.modal-overlay.show .modal{transform:translateY(0) scale(1);}
+.modal h3{font-size:18px;font-weight:800;margin-bottom:8px;}
+.modal p{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.modal-actions{display:flex;gap:10px;}
+.modal-btn{flex:1;padding:12px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;transition:var(--transition);}
+.modal-btn.cancel{background:var(--card);color:var(--muted);border:1px solid var(--border);}
+.modal-btn.cancel:hover{color:var(--text);background:var(--card-hover);}
+.modal-btn.confirm-delete{background:linear-gradient(135deg,var(--danger),#dc2626);color:#fff;}
+.modal-btn:hover{transform:translateY(-1px);}
+
+/* Toast */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);animation:toastIn 0.3s ease;min-width:220px;}
+.toast.success{border-right:3px solid var(--success);}
+.toast.error{border-right:3px solid var(--danger);}
+.toast.out{animation:toastOut 0.3s ease forwards;}
+
+/* Loading */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.4s ease;}
+.loading-overlay.hidden{opacity:0;pointer-events:none;}
+.loader{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.loading-text{font-size:14px;color:var(--muted);font-weight:600;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px);}}
+
+@media(max-width:640px){
+  .field-row{grid-template-columns:1fr;}
+  nav a span{display:none;}
+  nav a{padding:8px 12px;}
+  main{padding:16px 14px;}
+  .toast-container{right:14px;bottom:14px;}
+}
 </style>
 </head>
 <body>
 
-<header>🎯 الأهداف المالية</header>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader"></div>
+  <div class="loading-text">جارٍ تحميل الأهداف...</div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>🗑️ حذف الهدف</h3>
+    <p>هل أنت متأكد من حذف هذا الهدف؟ لا يمكن التراجع عن هذا الإجراء.</p>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" onclick="closeModal()">إلغاء</button>
+      <button class="modal-btn confirm-delete" id="deleteConfirmBtn">حذف نهائياً</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="header-logo">
+    <div class="logo-icon">💰</div>
+    مصاريفي
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+</header>
 
 <nav>
-  <a href="index.html">الرئيسية</a>
-  <a href="add.html">إضافة</a>
-  <a href="goals.html" class="active">الأهداف</a>
-  <a href="stats.html">تحليل</a>
+  <a href="index.html"><span>🏠</span> الرئيسية</a>
+  <a href="add.html"><span>➕</span> إضافة</a>
+  <a href="goals.html" class="active"><span>🎯</span> الأهداف</a>
+  <a href="stats.html"><span>📊</span> تحليل</a>
 </nav>
 
 <main>
-  <div class="card">
-    <h3>إضافة هدف جديد</h3>
-    <input type="text" id="goalName" placeholder="اسم الهدف">
-    <input type="number" id="goalTarget" placeholder="المبلغ المطلوب">
-    <button onclick="addGoal()">إضافة الهدف</button>
+  <div class="page-header">
+    <h1>🎯 الأهداف المالية</h1>
+    <p>ضع أهدافك وتابع تقدمك نحو تحقيقها</p>
   </div>
 
-  <div id="goalsList" class="section"></div>
+  <!-- Add Goal -->
+  <div class="add-card">
+    <div class="add-card-title">✨ هدف جديد</div>
+    <div class="field-row">
+      <div class="field">
+        <label>اسم الهدف</label>
+        <input type="text" id="goalName" placeholder="مثال: سفر، سيارة..." oninput="clearError()">
+      </div>
+      <div class="field">
+        <label>المبلغ المطلوب (IQD)</label>
+        <input type="number" id="goalTarget" placeholder="0" min="1" oninput="clearError()">
+      </div>
+    </div>
+    <div class="emoji-row" id="emojiRow"></div>
+    <div class="error-msg" id="formError">⚠️ يرجى إدخال اسم الهدف ومبلغ صحيح</div>
+    <button class="add-btn" id="addBtn" onclick="addGoal()">
+      <div class="spinner"></div>
+      <span>🎯 إضافة الهدف</span>
+    </button>
+  </div>
+
+  <!-- Goals List -->
+  <div class="section-title"><span>📋</span> أهدافك الحالية</div>
+  <div id="goalsList"></div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -67,76 +242,177 @@ const db = firebase.database();
 const goalsRef = db.ref("finance/goals");
 const transactionsRef = db.ref("finance/transactions");
 
-// ===== إضافة هدف جديد =====
-function addGoal(){
-  const name = document.getElementById("goalName").value.trim();
-  const target = Number(document.getElementById("goalTarget").value);
-  if(!name || !target) return alert("أدخل اسم الهدف والمبلغ");
-  goalsRef.push({name, target, saved:0});
-  document.getElementById("goalName").value="";
-  document.getElementById("goalTarget").value="";
+// ===== State =====
+let selectedEmoji = '🎯';
+const EMOJIS = ['🎯','✈️','🚗','🏠','💻','📱','👔','🎓','💍','🌍','🏋️','🎮'];
+
+// ===== Theme =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('theme', html.dataset.theme);
 }
 
-// ===== عرض الأهداف مع نسبة التقدم =====
-function displayGoals(goalsData, transactionsData){
-  const list = document.getElementById("goalsList");
-  list.innerHTML="";
-  if(!goalsData) return;
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.dataset.theme = saved;
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+})();
 
-  Object.entries(goalsData).forEach(([goalId, goal])=>{
-    // حساب saved من العمليات إذا موجود
-    let saved = goal.saved || 0;
-
-    // نسبة الإنجاز
-    const percent = Math.min(100, (saved/goal.target)*100);
-
-    list.innerHTML += `
-      <div class="card">
-        <h3>${goal.name} - الهدف: ${goal.target}</h3>
-        <div class="progress-container">
-          <progress value="${percent}" max="100"></progress>
-        </div>
-        <p>${percent.toFixed(0)}% من الهدف</p>
-        <button onclick="deleteGoal('${goalId}')">🗑️ حذف الهدف</button>
-      </div>
-    `;
-  });
+// ===== Toast =====
+function showToast(message, type = 'info') {
+  const icons = { success: '✅', error: '❌' };
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
-// ===== حذف الهدف =====
-function deleteGoal(id){
-  if(confirm("هل تريد حذف هذا الهدف؟")){
-    goalsRef.child(id).remove();
+// ===== Modal =====
+function closeModal() { document.getElementById('deleteModal').classList.remove('show'); }
+document.getElementById('deleteModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('deleteModal')) closeModal();
+});
+
+// ===== Emoji Picker =====
+function renderEmojiPicker() {
+  const row = document.getElementById('emojiRow');
+  row.innerHTML = EMOJIS.map(e => `
+    <button class="emoji-opt${e === selectedEmoji ? ' selected' : ''}" onclick="pickEmoji('${e}')">${e}</button>
+  `).join('');
+}
+
+function pickEmoji(e) {
+  selectedEmoji = e;
+  renderEmojiPicker();
+}
+
+// ===== Error =====
+function clearError() {
+  document.getElementById('formError').classList.remove('show');
+}
+
+// ===== Add Goal =====
+function addGoal() {
+  const name = document.getElementById('goalName').value.trim();
+  const target = Number(document.getElementById('goalTarget').value);
+
+  if (!name || !target || target <= 0) {
+    document.getElementById('formError').classList.add('show');
+    return;
   }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  goalsRef.push({ name, target, saved: 0, emoji: selectedEmoji })
+    .then(() => {
+      document.getElementById('goalName').value = '';
+      document.getElementById('goalTarget').value = '';
+      selectedEmoji = '🎯';
+      renderEmojiPicker();
+      showToast('تم إضافة الهدف بنجاح ✅', 'success');
+    })
+    .catch(() => showToast('فشل الإضافة، تحقق من اتصالك', 'error'))
+    .finally(() => {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    });
 }
 
-// ===== تحديث نسبة الإنجاز تلقائيًا =====
-function updateGoalsProgress(){
-  goalsRef.once("value").then(snap=>{
+// ===== Delete Goal =====
+function deleteGoal(id) {
+  document.getElementById('deleteConfirmBtn').onclick = () => {
+    goalsRef.child(id).remove()
+      .then(() => { showToast('تم حذف الهدف', 'success'); closeModal(); })
+      .catch(() => showToast('فشل الحذف، حاول مجدداً', 'error'));
+  };
+  document.getElementById('deleteModal').classList.add('show');
+}
+
+// ===== Display Goals =====
+function displayGoals(goalsData) {
+  const list = document.getElementById('goalsList');
+  if (!goalsData) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <p>لا توجد أهداف بعد — أضف هدفك الأول الآن!</p>
+      </div>`;
+    return;
+  }
+
+  const entries = Object.entries(goalsData);
+  list.innerHTML = entries.map(([id, goal], i) => {
+    const saved = goal.saved || 0;
+    const target = Number(goal.target);
+    const pct = Math.min(100, target > 0 ? (saved / target) * 100 : 0);
+    const remaining = Math.max(0, target - saved);
+    const done = pct >= 100;
+    const emoji = goal.emoji || '🎯';
+
+    return `
+      <div class="goal-card${done ? ' completed' : ''}" style="animation-delay:${i * 0.07}s">
+        <div class="goal-header">
+          <div class="goal-emoji">${emoji}</div>
+          <div class="goal-info">
+            <div class="goal-name">${goal.name}</div>
+            <div class="goal-meta">الهدف: ${Number(target).toLocaleString()} IQD</div>
+          </div>
+          <div class="goal-badge ${done ? 'done' : 'progress'}">${done ? '✅ مكتمل' : `${pct.toFixed(0)}%`}</div>
+        </div>
+        <div class="progress-row">
+          <span class="progress-pct">${pct.toFixed(1)}% مكتمل</span>
+          <span class="progress-amounts">${Number(saved).toLocaleString()} / ${Number(target).toLocaleString()}</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="goal-footer">
+          <div class="goal-remaining">
+            ${done ? '<strong style="color:var(--success)">🎉 تهانينا! حققت هدفك</strong>' : `متبقي: <strong>${Number(remaining).toLocaleString()} IQD</strong>`}
+          </div>
+          <button class="del-btn" onclick="deleteGoal('${id}')">🗑️ حذف</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ===== Update Goals Progress =====
+function updateGoalsProgress() {
+  goalsRef.once('value').then(snap => {
     const goals = snap.val();
-    transactionsRef.once("value").then(tsnap=>{
-      const transactions = tsnap.val() || {};
-      // حساب saved لكل هدف بناءً على العمليات
-      if(goals){
-        Object.entries(goals).forEach(([goalId, goal])=>{
-          let totalSaved = 0;
-          if(goal.transactions){
-            Object.values(goal.transactions).forEach(tr=>{
-              totalSaved += Number(tr.amount);
-            });
-          }
-          goalsRef.child(goalId).update({saved: totalSaved});
-        });
-      }
-      displayGoals(goals, transactions);
-    });
+    if (goals) {
+      Object.entries(goals).forEach(([goalId, goal]) => {
+        let totalSaved = 0;
+        if (goal.transactions) {
+          Object.values(goal.transactions).forEach(tr => {
+            totalSaved += Number(tr.amount);
+          });
+        }
+        goalsRef.child(goalId).update({ saved: totalSaved });
+      });
+    }
+    displayGoals(goals);
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) { overlay.classList.add('hidden'); setTimeout(() => overlay.remove(), 400); }
   });
 }
 
 // ===== Listeners =====
-goalsRef.on("value", updateGoalsProgress);
-transactionsRef.on("value", updateGoalsProgress);
+goalsRef.on('value', updateGoalsProgress);
+transactionsRef.on('value', updateGoalsProgress);
 
+// ===== Init =====
+renderEmojiPicker();
 </script>
 </body>
 </html>
